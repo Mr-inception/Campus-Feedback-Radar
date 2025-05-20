@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = 'cf-backend-production.up.railway.app/api';
 
 export interface Feedback {
   name: string;
