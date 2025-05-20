@@ -35,12 +35,74 @@ const FeedbackForm = () => {
     setFormData({ ...formData, rating });
   };
 
+  const validateForm = () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Name is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!formData.email.trim()) {
+      toast({
+        title: "Error",
+        description: "Email is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!formData.eventName.trim()) {
+      toast({
+        title: "Error",
+        description: "Event name is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!formData.eventType) {
+      toast({
+        title: "Error",
+        description: "Event type is required",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (formData.rating < 1 || formData.rating > 5) {
+      toast({
+        title: "Error",
+        description: "Please select a rating between 1 and 5",
+        variant: "destructive",
+      });
+      return false;
+    }
+    if (!formData.comments.trim()) {
+      toast({
+        title: "Error",
+        description: "Comments are required",
+        variant: "destructive",
+      });
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      await submitFeedback(formData);
+      const feedbackData = {
+        ...formData,
+        eventType: formData.eventType.toLowerCase(),
+      };
+      
+      await submitFeedback(feedbackData);
       toast({
         title: "Feedback Submitted",
         description: "Thank you for your valuable feedback!",

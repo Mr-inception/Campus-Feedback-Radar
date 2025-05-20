@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { z } = require('zod');
+const mongoose = require('mongoose');
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -9,8 +10,23 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// In-memory storage
-let feedbacks = [];
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/campus-feedback')
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
+
+// Feedback Schema
+const feedbackSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true },
+  eventName: { type: String, required: true },
+  eventType: { type: String, required: true },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comments: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Feedback = mongoose.model('Feedback', feedbackSchema);
 
 // Validation Schema
 const feedbackValidationSchema = z.object({
@@ -26,16 +42,14 @@ const feedbackValidationSchema = z.object({
 app.post('/api/feedback', async (req, res) => {
   try {
     const validatedData = feedbackValidationSchema.parse(req.body);
-    const feedback = {
-      ...validatedData,
-      createdAt: new Date()
-    };
-    feedbacks.push(feedback);
+    const feedback = new Feedback(validatedData);
+    await feedback.save();
     res.status(201).json({ message: 'Feedback submitted successfully', feedback });
   } catch (error) {
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: error.errors });
     } else {
+      console.error('Server error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   }
@@ -44,15 +58,17 @@ app.post('/api/feedback', async (req, res) => {
 app.get('/api/feedback', async (req, res) => {
   try {
     const { timeRange } = req.query;
-    let filteredFeedbacks = [...feedbacks];
+    let query = {};
     
     if (timeRange === 'last30days') {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      filteredFeedbacks = feedbacks.filter(f => f.createdAt >= thirtyDaysAgo);
+      query = { createdAt: { $gte: thirtyDaysAgo } };
     }
     
-    res.json(filteredFeedbacks.sort((a, b) => b.createdAt - a.createdAt));
+    const feedbacks = await Feedback.find(query).sort({ createdAt: -1 });
+    res.json(feedbacks);
   } catch (error) {
+    console.error('Error fetching feedback:', error);
     res.status(500).json({ error: 'Failed to fetch feedback' });
   }
 });
@@ -60,17 +76,18 @@ app.get('/api/feedback', async (req, res) => {
 app.get('/api/feedback/stats', async (req, res) => {
   try {
     const { timeRange } = req.query;
-    let filteredFeedbacks = [...feedbacks];
+    let query = {};
     
     if (timeRange === 'last30days') {
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      filteredFeedbacks = feedbacks.filter(f => f.createdAt >= thirtyDaysAgo);
+      query = { createdAt: { $gte: thirtyDaysAgo } };
     }
     
-    const total = filteredFeedbacks.length;
-    const positive = filteredFeedbacks.filter(f => f.rating >= 4).length;
-    const neutral = filteredFeedbacks.filter(f => f.rating === 3).length;
-    const negative = filteredFeedbacks.filter(f => f.rating <= 2).length;
+    const feedbacks = await Feedback.find(query);
+    const total = feedbacks.length;
+    const positive = feedbacks.filter(f => f.rating >= 4).length;
+    const neutral = feedbacks.filter(f => f.rating === 3).length;
+    const negative = feedbacks.filter(f => f.rating <= 2).length;
     
     res.json({
       total,
@@ -82,6 +99,7 @@ app.get('/api/feedback/stats', async (req, res) => {
       negativePercentage: total ? Math.round((negative / total) * 100) : 0
     });
   } catch (error) {
+    console.error('Error fetching stats:', error);
     res.status(500).json({ error: 'Failed to fetch feedback stats' });
   }
 });
