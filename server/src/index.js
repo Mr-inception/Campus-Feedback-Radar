@@ -15,8 +15,11 @@ app.use(express.json());
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/campus-feedback')
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+  .then(() => console.log('✅ Connected to MongoDB'))
+  .catch((err) => {
+    console.error('❌ MongoDB connection error:', err);
+    console.log('💡 Make sure MongoDB is running on your system');
+  });
 
 // Feedback Schema
 const feedbackSchema = new mongoose.Schema({
@@ -126,6 +129,11 @@ app.get('/api/feedback/stats', async (req, res) => {
 });
 
 // Start server
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-}); 
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(port, '0.0.0.0', () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
+
+// Export for Vercel
+export default app; 

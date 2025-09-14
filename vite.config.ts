@@ -9,7 +9,9 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
   },
-  plugins: [react()],
+  plugins: [react({
+    jsxRuntime: 'automatic'
+  })],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

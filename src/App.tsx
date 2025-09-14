@@ -9,6 +9,7 @@ import Submit from "./pages/Submit";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
+
 const queryClient = new QueryClient();
 
 const App = () => (
