@@ -4,6 +4,8 @@ import Footer from "@/components/Footer";
 import SentimentCard from "@/components/SentimentCard";
 import FeedbackChart from "@/components/FeedbackChart";
 import RecentFeedbackTable from "@/components/RecentFeedbackTable";
+import EventTypeChart from "@/components/EventTypeChart";
+import TrendChart from "@/components/TrendChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,8 +71,8 @@ const Dashboard = () => {
               description={`${stats.positive} positive responses`}
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-thumbs-up">
-                  <path d="M7 10v12"/>
-                  <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z"/>
+                  <path d="M7 10v12" />
+                  <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2h0a3.13 3.13 0 0 1 3 3.88Z" />
                 </svg>
               }
               colorClass="bg-feedback-positive/20 text-feedback-positive"
@@ -81,7 +83,7 @@ const Dashboard = () => {
               description={`${stats.neutral} neutral responses`}
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-minus">
-                  <path d="M5 12h14"/>
+                  <path d="M5 12h14" />
                 </svg>
               }
               colorClass="bg-feedback-neutral/20 text-feedback-neutral"
@@ -92,8 +94,8 @@ const Dashboard = () => {
               description={`${stats.negative} negative responses`}
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-thumbs-down">
-                  <path d="M17 14V2"/>
-                  <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z"/>
+                  <path d="M17 14V2" />
+                  <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22h0a3.13 3.13 0 0 1-3-3.88Z" />
                 </svg>
               }
               colorClass="bg-feedback-negative/20 text-feedback-negative"
@@ -104,11 +106,11 @@ const Dashboard = () => {
               description="Total feedback submissions"
               icon={
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-file-text">
-                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                  <polyline points="14 2 14 8 20 8"/>
-                  <line x1="16" x2="8" y1="13" y2="13"/>
-                  <line x1="16" x2="8" y1="17" y2="17"/>
-                  <line x1="10" x2="8" y1="9" y2="9"/>
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" x2="8" y1="13" y2="13" />
+                  <line x1="16" x2="8" y1="17" y2="17" />
+                  <line x1="10" x2="8" y1="9" y2="9" />
                 </svg>
               }
               colorClass="bg-blue-100 text-blue-600"
@@ -122,30 +124,14 @@ const Dashboard = () => {
               <TabsTrigger value="trends">Trends</TabsTrigger>
             </TabsList>
             <TabsContent value="overview" className="space-y-8 mt-6">
-              <FeedbackChart />
-              <RecentFeedbackTable />
+              <FeedbackChart timeRange={timeRange} />
+              <RecentFeedbackTable timeRange={timeRange} />
             </TabsContent>
             <TabsContent value="events">
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Event Type Analysis</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center p-12 text-gray-500">
-                  <p>This section will display detailed analytics for specific event types.</p>
-                  <p className="text-sm">(Full implementation coming with backend integration)</p>
-                </CardContent>
-              </Card>
+              <EventTypeChart />
             </TabsContent>
             <TabsContent value="trends">
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Feedback Trends Over Time</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center p-12 text-gray-500">
-                  <p>This section will show trending feedback patterns over selected time periods.</p>
-                  <p className="text-sm">(Full implementation coming with backend integration)</p>
-                </CardContent>
-              </Card>
+              <TrendChart timeRange={timeRange} />
             </TabsContent>
           </Tabs>
         </div>

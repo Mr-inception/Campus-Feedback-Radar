@@ -1,20 +1,32 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { getFeedbackStats } from "@/lib/api";
 
-const FeedbackChart = () => {
-  const [data, setData] = useState([]);
+const COLORS = ["#22c55e", "#f59e0b", "#ef4444"];
+
+interface FeedbackChartProps {
+  timeRange: string;
+}
+
+interface SentimentData {
+  name: string;
+  value: number;
+}
+
+const FeedbackChart = ({ timeRange }: FeedbackChartProps) => {
+  const [data, setData] = useState<SentimentData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const stats = await getFeedbackStats("last30days");
+        const stats = await getFeedbackStats(timeRange);
         setData([
-          { name: "Positive", value: stats.positivePercentage },
-          { name: "Neutral", value: stats.neutralPercentage },
-          { name: "Negative", value: stats.negativePercentage },
+          { name: "Positive", value: stats.positive },
+          { name: "Neutral", value: stats.neutral },
+          { name: "Negative", value: stats.negative },
         ]);
       } catch (error) {
         console.error("Failed to fetch feedback stats:", error);
@@ -24,13 +36,13 @@ const FeedbackChart = () => {
     };
 
     fetchData();
-  }, []);
+  }, [timeRange]);
 
   if (isLoading) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Feedback Distribution</CardTitle>
+          <CardTitle>Sentiment Distribution</CardTitle>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
           <p className="text-gray-500">Loading...</p>
@@ -42,25 +54,30 @@ const FeedbackChart = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Feedback Distribution</CardTitle>
+        <CardTitle>Sentiment Distribution</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Line
-                type="monotone"
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={5}
                 dataKey="value"
-                stroke="#8884d8"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 8 }}
+              >
+                {data.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip
+                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
               />
-            </LineChart>
+              <Legend verticalAlign="bottom" height={36} />
+            </PieChart>
           </ResponsiveContainer>
         </div>
       </CardContent>

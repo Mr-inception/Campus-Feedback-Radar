@@ -14,13 +14,16 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/campus-feedback')
-  .then(() => console.log('✅ Connected to MongoDB'))
-  .catch((err) => {
-    console.error('❌ MongoDB connection error:', err);
-    console.log('💡 Make sure MongoDB is running on your system');
-  });
+const connectDb = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('✅ Connected to MongoDB');
+  } catch (error) {
+    console.error('❌ MongoDB connection error:', error);
+  }
+};
 
+connectDb();
 // Feedback Schema
 const feedbackSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -128,12 +131,87 @@ app.get('/api/feedback/stats', async (req, res) => {
   }
 });
 
+app.get('/api/feedback/stats/event-types', async (req, res) => {
+  try {
+    const stats = await Feedback.aggregate([
+      {
+        $group: {
+          _id: "$eventType",
+          count: { $sum: 1 },
+          avgRating: { $avg: "$rating" }
+        }
+      },
+      {
+        $project: {
+          name: "$_id",
+          count: 1,
+          avgRating: { $round: ["$avgRating", 1] },
+          _id: 0
+        }
+      }
+    ]);
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.get('/api/feedback/stats/trends', async (req, res) => {
+  try {
+    const { timeRange } = req.query;
+    let dateFilter = {};
+    let groupFormat = "%Y-%m-%d";
+
+    switch (timeRange) {
+      case 'last7days':
+        dateFilter = { createdAt: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } };
+        break;
+      case 'last30days':
+        dateFilter = { createdAt: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } };
+        break;
+      case 'last90days':
+        dateFilter = { createdAt: { $gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) } };
+        break;
+      case 'thisYear':
+        const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+        dateFilter = { createdAt: { $gte: startOfYear } };
+        groupFormat = "%Y-%m";
+        break;
+    }
+
+    const stats = await Feedback.aggregate([
+      { $match: dateFilter },
+      {
+        $group: {
+          _id: { $dateToString: { format: groupFormat, date: "$createdAt" } },
+          count: { $sum: 1 },
+          avgRating: { $avg: "$rating" }
+        }
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          date: "$_id",
+          count: 1,
+          avgRating: { $round: ["$avgRating", 1] },
+          _id: 0
+        }
+      }
+    ]);
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Start server
 if (process.env.NODE_ENV !== 'production') {
   app.listen(port, '0.0.0.0', () => {
     console.log(`Server is running on port ${port}`);
   });
 }
+
+
 
 // Export for Vercel
 export default app; 
